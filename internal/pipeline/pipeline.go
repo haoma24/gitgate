@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/jvrsantacruz/gitgate/internal/review"
+	"github.com/jvrsantacruz/gitgate/internal/sysproc"
 )
 
 // StepName identifies a pipeline step.
@@ -474,6 +475,7 @@ func (p *Pipeline) log(step, level, message string) {
 func runGitInWorktree(worktreePath string, args ...string) (string, error) {
 	cmd := exec.Command("git", args...)
 	cmd.Dir = worktreePath
+	sysproc.Hide(cmd)
 	out, err := cmd.CombinedOutput()
 	return string(out), err
 }
@@ -481,6 +483,7 @@ func runGitInWorktree(worktreePath string, args ...string) (string, error) {
 func runCmdInDir(ctx context.Context, dir, name string, args ...string) (string, error) {
 	cmd := exec.CommandContext(ctx, name, args...)
 	cmd.Dir = dir
+	sysproc.Hide(cmd)
 	out, err := cmd.CombinedOutput()
 	return string(out), err
 }
