@@ -223,12 +223,26 @@ func (p *Pipeline) runRebase(ctx context.Context, cfg Config) *StepResult {
 		return sr
 	}
 
-	// Attempt rebase
 	targetBranch := fmt.Sprintf("%s/%s", cfg.OriginRemote, cfg.targetBranch())
+
+	// When the target branch does not exist on the remote yet — e.g. the very
+	// first push to an empty repository — there is nothing to rebase onto.
+	// Skip rather than fail so the initial commit can still flow through the gate.
+	if _, err := runGitInWorktree(cfg.WorktreePath, "rev-parse", "--verify", "--quiet", targetBranch+"^{commit}"); err != nil {
+		sr.Status = "skip"
+		sr.Output = fmt.Sprintf("target %s does not exist on remote yet; skipping rebase (first push?)", targetBranch)
+		p.log("rebase", "info", sr.Output)
+		return sr
+	}
+
+	// Attempt rebase
 	p.log("rebase", "info", fmt.Sprintf("rebasing onto %s", targetBranch))
 	if out, err := runCmdInDir(ctx, cfg.WorktreePath, "git", "rebase", targetBranch); err != nil {
+		// A failed rebase (e.g. conflicts) leaves the worktree mid-rebase, which
+		// would break later steps and worktree cleanup. Abort to restore a clean tree.
+		_, _ = runCmdInDir(ctx, cfg.WorktreePath, "git", "rebase", "--abort")
 		sr.Status = "fail"
-		sr.Error = fmt.Errorf("rebase failed: %w\nOutput: %s", err, out)
+		sr.Error = fmt.Errorf("rebase failed: %w", err)
 		sr.Output = out
 		return sr
 	}
