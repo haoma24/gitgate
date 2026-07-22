@@ -1,0 +1,50 @@
+# GitGate Configuration
+# Documentation: https://github.com/jvrsantacruz/gitgate#configuration
+version: 1
+
+pipeline:
+  # Steps to disable (remove from list to enable)
+  # Available: intent, rebase, review, test, lint, push, pr
+  skip: []
+
+  # Maximum number of concurrent pipeline runs
+  max_parallel_runs: 2
+
+  # Branch to rebase onto before pushing
+  target_branch: main
+
+review:
+  # AI provider for code review
+  # Options: anthropic, openai, ollama, cli
+  provider: anthropic
+
+  # Model to use for review
+  model: claude-opus-4-5
+
+  # Minimum severity to fail the pipeline
+  # Options: critical, high, medium, low
+  fail_on: high
+
+  # Optional: custom system prompt for the reviewer
+  # system_prompt: |
+  #   You are a strict code reviewer...
+
+test:
+  # Test command (auto-detected if not set)
+  # command: go test ./...
+  timeout_secs: 300
+
+lint:
+  # Lint command (auto-detected if not set)
+  # command: golangci-lint run
+  timeout_secs: 60
+
+pr:
+  # Create PRs as drafts
+  draft: false
+
+  # Labels to add to PRs
+  labels: []
+
+  # Path to PR template (relative to repo root)
+  # template: .github/pull_request_template.md
