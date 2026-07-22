@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"github.com/jvrsantacruz/gitgate/internal/sysproc"
 )
 
 // GitGateHome returns the path to the ~/.gitgate directory.
@@ -230,6 +232,7 @@ func RevParse(dir, rev string) (string, error) {
 func PushToRemote(dir, remote, branch string) (string, error) {
 	cmd := exec.Command("git", "push", remote, branch)
 	cmd.Dir = dir
+	sysproc.Hide(cmd)
 	out, err := cmd.CombinedOutput()
 	return string(out), err
 }
@@ -250,6 +253,7 @@ func runGitInDir(dir string, args ...string) (string, error) {
 	if dir != "" {
 		cmd.Dir = dir
 	}
+	sysproc.Hide(cmd)
 
 	var stdout, stderr strings.Builder
 	cmd.Stdout = &stdout

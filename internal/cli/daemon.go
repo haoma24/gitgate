@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"os"
+	"strings"
 	"text/tabwriter"
 	"time"
 
@@ -195,11 +196,18 @@ func showDaemonLogs(runID string, lines int) error {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	fmt.Fprintln(w, "TIME\tLEVEL\tMESSAGE")
 	for _, l := range logs {
+		// Messages may be multi-line (e.g. captured git/test output). Print the
+		// first line in the table row, then continuation lines indented under the
+		// MESSAGE column so the tabwriter alignment is preserved and nothing is lost.
+		msgLines := strings.Split(strings.TrimRight(l.Message, "\n"), "\n")
 		fmt.Fprintf(w, "%s\t%s\t%s\n",
 			l.Timestamp.Format(time.RFC3339),
 			l.Level,
-			l.Message,
+			msgLines[0],
 		)
+		for _, cont := range msgLines[1:] {
+			fmt.Fprintf(w, "\t\t%s\n", cont)
+		}
 	}
 	return w.Flush()
 }

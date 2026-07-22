@@ -10,6 +10,8 @@ import (
 	"os/exec"
 	"strings"
 	"time"
+
+	"github.com/jvrsantacruz/gitgate/internal/sysproc"
 )
 
 // httpClient is shared by the cloud providers. Reviews can take a while, so the
@@ -204,6 +206,7 @@ func (p *cliProvider) Name() string { return "cli:" + fields(p.opts.CLICommand)[
 func (p *cliProvider) Review(ctx context.Context, req Request) ([]Finding, error) {
 	parts := fields(p.opts.CLICommand)
 	cmd := exec.CommandContext(ctx, parts[0], parts[1:]...)
+	sysproc.Hide(cmd)
 
 	prompt := p.opts.SystemPrompt + "\n\n" + buildUserMessage(req)
 	cmd.Stdin = strings.NewReader(prompt)
